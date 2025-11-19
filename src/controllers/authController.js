@@ -1,0 +1,32 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
+
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  const [rows] = await User.getByEmail(email);
+
+  if (rows.length === 0) {
+    return res.status(400).json({ message: "Email tidak ditemukan" });
+  }
+
+  const user = rows[0];
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) {
+    return res.status(400).json({ message: "Password salah" });
+  }
+
+  const token = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES }
+  );
+
+  res.json({
+    message: "Login berhasil",
+    token,
+    user: { id: user.id, name: user.name, role: user.role },
+  });
+};
