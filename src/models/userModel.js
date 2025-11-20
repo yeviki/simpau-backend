@@ -17,13 +17,36 @@ module.exports = {
   },
 
   update(id, data) {
-    return db.query(
-      "UPDATE users SET username=?, email=?, role=? WHERE id=?",
-      [data.username, data.email, data.role, id]
-    );
+    const fields = [];
+    const values = [];
+
+    for (const key in data) {
+      fields.push(`${key}=?`);
+      values.push(data[key]);
+    }
+
+    values.push(id);
+
+    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id=?`;
+    return db.query(sql, values);
   },
 
   delete(id) {
     return db.query("DELETE FROM users WHERE id=?", [id]);
+  },
+
+  checkDuplicate(username, email) {
+    return db.query(
+      "SELECT id FROM users WHERE username=? OR email=?",
+      [username, email]
+    );
+  },
+
+  checkDuplicateOnUpdate(id, username, email) {
+    return db.query(
+      "SELECT id FROM users WHERE (username=? OR email=?) AND id!=?",
+      [username, email, id]
+    );
   }
+
 };
