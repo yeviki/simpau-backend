@@ -1,3 +1,4 @@
+// controllers/authController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
@@ -28,5 +29,23 @@ exports.login = async (req, res) => {
     message: "Login berhasil",
     token,
     user: { id: user.id, name: user.name, role: user.role },
+  });
+};
+
+// ---- GET /auth/me ----
+exports.me = async (req, res) => {
+  const [rows] = await User.getById(req.user.id);
+
+  if (rows.length === 0) {
+    return res.status(404).json({ message: "User tidak ditemukan" });
+  }
+
+  const user = rows[0];
+
+  res.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
   });
 };

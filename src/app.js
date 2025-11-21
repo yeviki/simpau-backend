@@ -1,3 +1,4 @@
+// app.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -5,7 +6,11 @@ const cors = require("cors");
 const app = express();
 
 // ====== MIDDLEWARE DASAR ======
-app.use(cors());
+// Ganti IP Localhost Jika IP Frontend berubah dibawah ini
+app.use(cors({
+  origin: ["http://localhost:5173", "https://domainvuekamu.com"],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -21,20 +26,23 @@ app.use("/api/users", require("./routes/userRoutes"));
 // ============================================================
 // ============== GLOBAL ERROR HANDLER ========================
 // ============================================================
-// Semua error yg dilempar di controller (next(error))
-// akan ditangkap di sini.
 app.use((err, req, res, next) => {
-  console.error("🔥 ERROR:", err); // untuk log di server
+  console.error("🔥 ERROR:", err);
 
-  // Jika error punya statusCode → gunakan
-  const status = err.statusCode || 500;
+  // Error berbasis field (errors.username, errors.email, dll)
+  if (err.fields) {
+    return res.status(err.status || 400).json({
+      errors: err.fields,
+    });
+  }
 
-  res.status(status).json({
-    success: false,
-    message: err.message || "Terjadi kesalahan pada server",
+  // Error biasa
+  return res.status(err.status || 500).json({
+    errors: {
+      general: err.message || "Terjadi kesalahan pada server",
+    },
   });
 });
-
 
 // ====== START SERVER ======
 const PORT = process.env.PORT || 5000;

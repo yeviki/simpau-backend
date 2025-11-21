@@ -1,11 +1,13 @@
+// controllers/userController.js
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const { isEmail, isStrongPassword, sanitize } = require("../utils/validate");
 
-// Helper lempar error
-const throwError = (msg, code = 400) => {
-  const err = new Error(msg);
+// Helper untuk error per-field
+const fieldError = (fields, code = 400) => {
+  const err = new Error("Validation Error");
   err.status = code;
+  err.fields = fields; // <-- penting!
   throw err;
 };
 
@@ -25,22 +27,38 @@ exports.createUser = async (req, res, next) => {
     const password = req.body.password;
     const role = req.body.role;
 
-    if (!isEmail(email)) throwError("Format email tidak valid");
-    if (!isStrongPassword(password))
-      throwError("Password minimal 6 karakter");
+    // VALIDASI
+    if (!isEmail(email)) {
+      return fieldError({ email: "Format email tidak valid" });
+    }
+
+    if (!isStrongPassword(password)) {
+      return fieldError({ password: "Password minimal 6 karakter" });
+    }
 
     const [exist] = await User.checkDuplicate(username, email);
-    if (exist.length > 0)
-      throwError("Username atau Email sudah digunakan");
+    if (exist.length > 0) {
+      const errors = {};
 
+      // Cek username duplikat
+      if (exist[0].username === username) {
+        errors.username = "Username sudah digunakan user lain";
+      }
+
+      // Cek email duplikat
+      if (exist[0].email === email) {
+        errors.email = "Email sudah digunakan user lain";
+      }
+
+      // Jika ada minimal satu error field
+      if (Object.keys(errors).length > 0) {
+        return fieldError(errors);
+      }
+    }
+
+    // SIMPAN
     const hash = await bcrypt.hash(password, 10);
-
-    await User.create({
-      username,
-      email,
-      password: hash,
-      role,
-    });
+    await User.create({ username, email, password: hash, role });
 
     res.json({ message: "User berhasil ditambahkan" });
 
@@ -52,31 +70,52 @@ exports.createUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
+
     const username = sanitize(req.body.username);
     const email = sanitize(req.body.email);
     const role = req.body.role;
     const password = req.body.password;
 
-    if (!isEmail(email)) throwError("Format email tidak valid");
+    if (!isEmail(email)) {
+      return fieldError({ email: "Format email tidak valid" });
+    }
 
     const [exist] = await User.checkDuplicateOnUpdate(id, username, email);
-    if (exist.length > 0)
-      throwError("Username atau Email sudah digunakan user lain");
+
+    if (exist.length > 0) {
+      const errors = {};
+
+      // Cek username duplikat
+      if (exist[0].username === username) {
+        errors.username = "Username sudah digunakan user lain";
+      }
+
+      // Cek email duplikat
+      if (exist[0].email === email) {
+        errors.email = "Email sudah digunakan user lain";
+      }
+
+      // Jika ada minimal satu error field
+      if (Object.keys(errors).length > 0) {
+        return fieldError(errors);
+      }
+    }
 
     const data = { username, email, role };
 
     if (password && password.trim() !== "") {
-      if (!isStrongPassword(password))
-        throwError("Password minimal 6 karakter");
-
+      if (!isStrongPassword(password)) {
+        return fieldError({ password: "Password minimal 6 karakter" });
+      }
       const hashed = await bcrypt.hash(password, 10);
       data.password = hashed;
     }
 
     const [result] = await User.update(id, data);
 
-    if (result.affectedRows === 0)
-      throwError("User tidak ditemukan", 404);
+    if (result.affectedRows === 0) {
+      return fieldError({ general: "User tidak ditemukan" }, 404);
+    }
 
     res.json({ message: "User berhasil diupdate" });
 
@@ -90,8 +129,9 @@ exports.deleteUser = async (req, res, next) => {
     const { id } = req.params;
 
     const [result] = await User.delete(id);
-    if (result.affectedRows === 0)
-      throwError("User tidak ditemukan", 404);
+    if (result.affectedRows === 0) {
+      return fieldError({ general: "User tidak ditemukan" }, 404);
+    }
 
     res.json({ message: "User berhasil dihapus" });
 

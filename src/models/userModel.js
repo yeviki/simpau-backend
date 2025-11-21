@@ -1,8 +1,13 @@
+// models/userModel.js
 const db = require("../config/db");
 
 module.exports = {
   getAll() {
-    return db.query("SELECT * FROM users");
+    return db.query("SELECT id, username, email, role FROM users ORDER BY id ASC");
+  },
+
+  getById(id) {
+    return db.execute("SELECT * FROM users WHERE id = ?", [id]);
   },
 
   getByEmail(email) {
@@ -37,14 +42,14 @@ module.exports = {
 
   checkDuplicate(username, email) {
     return db.query(
-      "SELECT id FROM users WHERE username=? OR email=?",
+      "SELECT id, username, email FROM users WHERE (username = ? OR email = ?)",
       [username, email]
     );
   },
 
   checkDuplicateOnUpdate(id, username, email) {
     return db.query(
-      "SELECT id FROM users WHERE (username=? OR email=?) AND id!=?",
+      "SELECT id, username, email FROM users WHERE (username = ? OR email = ?) AND id != ?",
       [username, email, id]
     );
   }
