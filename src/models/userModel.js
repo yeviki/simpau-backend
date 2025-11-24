@@ -3,20 +3,20 @@ const db = require("../config/db");
 
 module.exports = {
   getAll() {
-    return db.query("SELECT id, username, email, role FROM users ORDER BY id ASC");
+    return db.query("SELECT id, username, email, role FROM syst_users ORDER BY id ASC");
   },
 
   getById(id) {
-    return db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    return db.execute("SELECT * FROM syst_users WHERE id = ?", [id]);
   },
 
   getByEmail(email) {
-    return db.query("SELECT * FROM users WHERE email = ?", [email]);
+    return db.query("SELECT * FROM syst_users WHERE email = ?", [email]);
   },
 
   create(data) {
     return db.query(
-      "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
+      "INSERT INTO syst_users (username, email, password, role) VALUES (?, ?, ?, ?)",
       [data.username, data.email, data.password, data.role]
     );
   },
@@ -32,24 +32,24 @@ module.exports = {
 
     values.push(id);
 
-    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id=?`;
+    const sql = `UPDATE syst_users SET ${fields.join(", ")} WHERE id=?`;
     return db.query(sql, values);
   },
 
   delete(id) {
-    return db.query("DELETE FROM users WHERE id=?", [id]);
+    return db.query("DELETE FROM syst_users WHERE id=?", [id]);
   },
 
   checkDuplicate(username, email) {
     return db.query(
-      "SELECT id, username, email FROM users WHERE (username = ? OR email = ?)",
+      "SELECT id, username, email FROM syst_users WHERE (username = ? OR email = ?)",
       [username, email]
     );
   },
 
   checkDuplicateOnUpdate(id, username, email) {
     return db.query(
-      "SELECT id, username, email FROM users WHERE (username = ? OR email = ?) AND id != ?",
+      "SELECT id, username, email FROM syst_users WHERE (username = ? OR email = ?) AND id != ?",
       [username, email, id]
     );
   }
