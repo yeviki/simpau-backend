@@ -2,6 +2,24 @@
 const db = require("../config/db");
 
 module.exports = {
+  getMenuByRole(roles_id) {
+    return db.query(`
+      SELECT 
+        m.id_menu,
+        m.title_menu,
+        m.url_menu,
+        m.icon_menu,
+        m.order_menu,
+        m.parent_id,
+        m.component
+      FROM syst_roles_menu rm
+      JOIN syst_menu m ON m.id_menu = rm.menu_id
+      WHERE rm.roles_id = ?
+        AND rm.id_status = 1
+      ORDER BY m.parent_id ASC, m.order_menu ASC
+    `, [roles_id]);
+  },
+
   getAll() {
     return db.query(`
       SELECT us.*, rl.roles_name
@@ -11,9 +29,10 @@ module.exports = {
     `);
   },
 
-
   getById(id) {
-    return db.execute("SELECT * FROM syst_users WHERE id = ?", [id]);
+    return db.execute(`SELECT us.*, rl.roles_name
+      FROM syst_users us
+      JOIN syst_roles rl ON rl.id = us.roles_id WHERE us.id = ?`, [id]);
   },
 
   getByEmail(email) {

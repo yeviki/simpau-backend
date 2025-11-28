@@ -32,6 +32,18 @@ exports.login = async (req, res) => {
   });
 };
 
+exports.getMenu = async (req, res) => {
+  const roles_id = req.user.roles_id;
+
+  const [rows] = await User.getMenuByRole(roles_id);
+
+  res.json({
+    success: true,
+    menu: rows,
+  });
+};
+
+
 // ---- GET /auth/me ----
 exports.me = async (req, res) => {
   const [rows] = await User.getById(req.user.id);
@@ -47,5 +59,6 @@ exports.me = async (req, res) => {
     name: user.name,
     email: user.email,
     roles_id: user.roles_id,
+    roles_name: user.roles_name,
   });
 };

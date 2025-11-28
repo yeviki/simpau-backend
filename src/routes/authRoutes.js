@@ -1,6 +1,6 @@
 // routes/authRoutes.js
 const router = require("express").Router();
-const { login, me } = require("../controllers/authController");
+const { login, getMenu, me } = require("../controllers/authController");
 const authMiddleware = require("../middlewares/auth");
 
 // 1 Super Admin
@@ -13,5 +13,8 @@ router.post("/login", login);
 
 // GET /auth/me (protected)
 router.get("/me", authMiddleware, me);
+
+// Get User Roles Menu
+router.get("/menu", authMiddleware, getMenu);
 
 module.exports = router;
