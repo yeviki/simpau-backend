@@ -6,30 +6,95 @@ const User = require("../models/userModel");
 // --- Controller ---
 exports.login = async (req, res) => {
   const { email, password } = req.body;
+  const identifier = email; // email atau username
+  const now = new Date();
 
-  // email → sebenarnya identifier (bisa email atau username)
-  const identifier = email;
-
+  // --- ambil data user ---
   const [rows] = await User.getByIdentifier(identifier);
+  const userExists = rows.length > 0;
+  const user = userExists ? rows[0] : null;
 
-  if (rows.length === 0) {
-    // simpan login gagal, user_id = null
+  // --- cek user diblokir / tidak aktif ---
+  if (user) {
+    if (user.blokir === "YA") {
+      return res.status(403).json({ message: "Akun Anda telah diblokir" });
+    }
+    if (user.id_status !== "Aktif") {
+      return res.status(403).json({ message: "Akun Anda tidak aktif" });
+    }
+  }
+
+  // --- user tidak ditemukan ---
+  if (!userExists) {
     await User.saveLoginHistory(null, "failed", req, identifier);
+    const [failRaw] = await User.countFailedLogins(identifier);
+    const failCount = failRaw[0].failCount || 0;
+    const sisa = 10 - failCount;
+
+    if (failCount >= 10) {
+      return res.status(403).json({ message: "Akun diblokir karena terlalu banyak percobaan login gagal" });
+    }
+
+    if (failCount >= 5) {
+      return res.status(400).json({
+        message: `Login gagal, Anda sudah ${failCount} kali gagal. Kesempatan tinggal ${sisa} kali lagi.`
+      });
+    }
+
     return res.status(400).json({ message: "Email atau Username tidak ditemukan" });
   }
 
-  const user = rows[0];
-
+  // --- user valid → cek password ---
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
-    // simpan login gagal
+    if (!valid) {
+    const now = new Date();
+    let failCount = (user.fail_count || 0) + 1; // ambil fail_count dari user + 1
+    let blockedUntil = null;
+    const baseLock = 1; // menit untuk setiap gagal login
+
+    // --- cek blokir sementara ---
+    if (failCount >= 5 && failCount < 10) {
+      blockedUntil = new Date(now.getTime() + baseLock * (failCount - 4) * 60 * 1000);
+    }
+
+    // --- update fail_count & blocked_until di tabel user ---
+    await User.updateFailedLoginMeta(user.id, failCount, blockedUntil);
+
+    // --- simpan history ---
     await User.saveLoginHistory(user.id, "failed", req, identifier);
-    return res.status(400).json({ message: "Password salah" });
+
+    // --- BLOKIR PERMANEN ---
+    if (failCount >= 10) {
+      await User.blockUser(user.id);
+      return res.status(403).json({
+        message: "Akun diblokir karena terlalu banyak percobaan login gagal! Hubungi admin."
+      });
+    }
+
+    const sisa = 10 - failCount;
+    if (blockedUntil && now < blockedUntil) {
+      const remaining = Math.ceil((blockedUntil - now) / 1000);
+      return res.status(403).json({
+        message: `Akun sementara terkunci. Percobaan gagal ke-${failCount}. Silahkan tunggu sampai ${blockedUntil.toLocaleTimeString()} (${Math.ceil((blockedUntil - now)/60000)} menit).`,
+        blockedUntil: blockedUntil.toISOString(),
+        remainingSeconds: remaining,
+        failCount
+      });
+    }
+
+    return res.status(failCount >= 5 ? 401 : 400).json({
+      message: `Username atau Password salah. Percobaan gagal ke-${failCount}. Kesempatan tinggal ${sisa} kali lagi.`,
+      failCount
+    });
   }
 
-  // login berhasil → simpan history
+  // --- login berhasil ---
   await User.saveLoginHistory(user.id, "success", req, identifier);
 
+  // --- reset fail count & unblock user ---
+  await User.updateFailedLoginMeta(user.id, 0);
+
+  // --- generate token ---
   const token = jwt.sign(
     { id: user.id, roles_id: user.roles_id },
     process.env.JWT_SECRET,
@@ -42,6 +107,45 @@ exports.login = async (req, res) => {
     user: { id: user.id, name: user.name, roles_id: user.roles_id },
   });
 };
+
+// exports.login = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // email → sebenarnya identifier (bisa email atau username)
+//   const identifier = email;
+
+//   const [rows] = await User.getByIdentifier(identifier);
+
+//   if (rows.length === 0) {
+//     // simpan login gagal, user_id = null
+//     await User.saveLoginHistory(null, "failed", req, identifier);
+//     return res.status(400).json({ message: "Email atau Username tidak ditemukan" });
+//   }
+
+//   const user = rows[0];
+
+//   const valid = await bcrypt.compare(password, user.password);
+//   if (!valid) {
+//     // simpan login gagal
+//     await User.saveLoginHistory(user.id, "failed", req, identifier);
+//     return res.status(400).json({ message: "Password salah" });
+//   }
+
+//   // login berhasil → simpan history
+//   await User.saveLoginHistory(user.id, "success", req, identifier);
+
+//   const token = jwt.sign(
+//     { id: user.id, roles_id: user.roles_id },
+//     process.env.JWT_SECRET,
+//     { expiresIn: process.env.JWT_EXPIRES }
+//   );
+
+//   return res.json({
+//     message: "Login berhasil",
+//     token,
+//     user: { id: user.id, name: user.name, roles_id: user.roles_id },
+//   });
+// };
 
 exports.getMenu = async (req, res) => {
   const roles_id = req.user.roles_id;

@@ -22,11 +22,13 @@ exports.getUsers = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const fullname = sanitize(req.body.fullname);
-    const username = sanitize(req.body.username);
-    const email = sanitize(req.body.email);
-    const password = req.body.password;
-    const roles_id = req.body.roles_id;
+    const fullname  = sanitize(req.body.fullname);
+    const username  = sanitize(req.body.username);
+    const email     = sanitize(req.body.email);
+    const password  = req.body.password;
+    const roles_id  = req.body.roles_id;
+    const blokir    = req.body.blokir;
+    const id_status = req.body.id_status;
 
     // VALIDASI
     if (!isEmail(email)) {
@@ -59,7 +61,7 @@ exports.createUser = async (req, res, next) => {
 
     // SIMPAN
     const hash = await bcrypt.hash(password, 10);
-    await User.create({ fullname, username, email, password: hash, roles_id });
+    await User.create({ fullname, username, email, password: hash, roles_id, blokir, id_status });
 
     res.json({ message: "User berhasil ditambahkan" });
 
@@ -72,11 +74,13 @@ exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const fullname = sanitize(req.body.fullname);
-    const username = sanitize(req.body.username);
-    const email = sanitize(req.body.email);
-    const roles_id = req.body.roles_id;
-    const password = req.body.password;
+    const fullname  = sanitize(req.body.fullname);
+    const username  = sanitize(req.body.username);
+    const email     = sanitize(req.body.email);
+    const roles_id  = req.body.roles_id;
+    const password  = req.body.password;
+    const blokir    = req.body.blokir;
+    const id_status = req.body.id_status;
 
     if (!isEmail(email)) {
       return fieldError({ email: "Format email tidak valid" });
@@ -103,7 +107,7 @@ exports.updateUser = async (req, res, next) => {
       }
     }
 
-    const data = { fullname, username, email, roles_id };
+    const data = { fullname, username, email, roles_id, blokir, id_status };
 
     if (password && password.trim() !== "") {
       if (!isStrongPassword(password)) {

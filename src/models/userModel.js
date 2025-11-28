@@ -2,6 +2,46 @@
 const db = require("../config/db");
 
 module.exports = {
+  countFailedLogins(identifier, user_id = null) {
+    if (user_id) {
+      return db.execute(
+        `SELECT COUNT(*) AS failCount
+        FROM syst_login_history
+        WHERE user_id = ?
+          AND status = 'failed'`,
+        [user_id]
+      );
+    } else {
+      return db.execute(
+        `SELECT COUNT(*) AS failCount
+        FROM syst_login_history
+        WHERE attempted_email = ?
+          AND status = 'failed'`,
+        [identifier]
+      );
+    }
+  },
+
+  // --- RESET fail count & blokir meta tanpa hapus history
+  // Tambahkan blockedUntil agar blokir sementara bisa tersimpan
+  updateFailedLoginMeta(user_id, failCount = 0, blockedUntil = null) {
+    return db.execute(
+      `UPDATE syst_users 
+       SET fail_count = ?, blocked_until = ? 
+       WHERE id = ?`,
+      [failCount, blockedUntil, user_id]
+    );
+  },
+
+  blockUser(id) {
+    return db.query(
+      `UPDATE syst_users SET blokir = 'YA' WHERE id = ?`,
+      [id]
+    );
+  },
+
+  // ------------------------------------------- //
+
   saveLoginHistory(user_id, status, req, attempted_identifier = null) {
     const ip = req.ip;
     const ua = req.headers["user-agent"];
@@ -17,13 +57,15 @@ module.exports = {
   updateLogoutTime(user_id) {
     return db.query(
       `UPDATE syst_login_history 
-      SET logout_time = NOW() 
-      WHERE user_id = ? AND status = 'success' AND logout_time IS NULL
-      ORDER BY login_time DESC
-      LIMIT 1`,
+       SET logout_time = NOW() 
+       WHERE user_id = ? AND status = 'success' AND logout_time IS NULL
+       ORDER BY login_time DESC
+       LIMIT 1`,
       [user_id]
     );
   },
+
+  // ------------------------------------------- //
 
   getMenuByRole(roles_id) {
     return db.query(`
@@ -43,6 +85,13 @@ module.exports = {
     `, [roles_id]);
   },
 
+  getByIdentifier(identifier) {
+    return db.query(
+      "SELECT * FROM syst_users WHERE email = ? OR username = ? LIMIT 1",
+      [identifier, identifier]
+    );
+  },
+
   getAll() {
     return db.query(`
       SELECT us.*, rl.roles_name
@@ -58,18 +107,14 @@ module.exports = {
       JOIN syst_roles rl ON rl.id = us.roles_id WHERE us.id = ?`, [id]);
   },
 
-  getByIdentifier(identifier) {
-    return db.query("SELECT * FROM syst_users WHERE email = ? OR username = ? LIMIT 1", [identifier, identifier]);
-  },
-
   getByEmail(email) {
     return db.query("SELECT * FROM syst_users WHERE email = ?", [email]);
   },
 
   create(data) {
     return db.query(
-      "INSERT INTO syst_users (fullname, username, email, password, roles_id) VALUES (?, ?, ?, ?, ?)",
-      [data.fullname, data.username, data.email, data.password, data.roles_id]
+      "INSERT INTO syst_users (fullname, username, email, password, roles_id, blokir, id_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [data.fullname, data.username, data.email, data.password, data.roles_id, data.blokir, data.id_status]
     );
   },
 
@@ -104,6 +149,6 @@ module.exports = {
       "SELECT id, username, email FROM syst_users WHERE (username = ? OR email = ?) AND id != ?",
       [username, email, id]
     );
-  }
+  },
 
 };
