@@ -66,6 +66,34 @@ module.exports = {
 
   getRoleMenus(roles_id) {
     return db.query(
+      "SELECT menu_id FROM syst_roles_menu WHERE id_status = 1 AND roles_id = ?",
+      [roles_id]
+    );
+  },
+
+  checkRoleMenu(roles_id, menu_id) {
+    return db.query(
+      "SELECT * FROM syst_roles_menu WHERE roles_id = ? AND menu_id = ?",
+      [roles_id, menu_id]
+    );
+  },
+
+  insertRoleMenu(roles_id, menu_id) {
+    return db.query(
+      "INSERT INTO syst_roles_menu (roles_id, menu_id, id_status) VALUES (?, ?, 1)",
+      [roles_id, menu_id]
+    );
+  },
+
+  updateRoleMenuStatus(roles_id, menu_id, status) {
+    return db.query(
+      "UPDATE syst_roles_menu SET id_status = ? WHERE roles_id = ? AND menu_id = ?",
+      [status, roles_id, menu_id]
+    );
+  },
+
+  getAllRoleMenus(roles_id) {
+    return db.query(
       "SELECT menu_id FROM syst_roles_menu WHERE roles_id = ?",
       [roles_id]
     );

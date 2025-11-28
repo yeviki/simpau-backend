@@ -2,6 +2,29 @@
 const db = require("../config/db");
 
 module.exports = {
+  saveLoginHistory(user_id, status, req, attempted_identifier = null) {
+    const ip = req.ip;
+    const ua = req.headers["user-agent"];
+
+    return db.query(
+      `INSERT INTO syst_login_history 
+        (user_id, attempted_email, login_time, ip_address, user_agent, status) 
+        VALUES (?, ?, NOW(), ?, ?, ?)`,
+      [user_id, attempted_identifier, ip, ua, status]
+    );
+  },
+
+  updateLogoutTime(user_id) {
+    return db.query(
+      `UPDATE syst_login_history 
+      SET logout_time = NOW() 
+      WHERE user_id = ? AND status = 'success' AND logout_time IS NULL
+      ORDER BY login_time DESC
+      LIMIT 1`,
+      [user_id]
+    );
+  },
+
   getMenuByRole(roles_id) {
     return db.query(`
       SELECT 
@@ -33,6 +56,10 @@ module.exports = {
     return db.execute(`SELECT us.*, rl.roles_name
       FROM syst_users us
       JOIN syst_roles rl ON rl.id = us.roles_id WHERE us.id = ?`, [id]);
+  },
+
+  getByIdentifier(identifier) {
+    return db.query("SELECT * FROM syst_users WHERE email = ? OR username = ? LIMIT 1", [identifier, identifier]);
   },
 
   getByEmail(email) {

@@ -118,17 +118,51 @@ exports.getRoleMenus = async (req, res, next) => {
   }
 };
 
+// exports.updateRoleMenus = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const menu_ids = req.body.menu_ids || [];
+
+//     // Hapus semua menu lama
+//     await ModelData.deleteRoleMenus(id);
+
+//     // Simpan kembali menu baru
+//     if (menu_ids.length > 0) {
+//       await ModelData.addRoleMenus(id, menu_ids);
+//     }
+
+//     res.json({ message: "Hak akses berhasil diperbarui" });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 exports.updateRoleMenus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const menu_ids = req.body.menu_ids || [];
 
-    // Hapus semua menu lama
-    await ModelData.deleteRoleMenus(id);
+    // 1. Ambil menu yg sudah tersimpan untuk role ini
+    const [existing] = await ModelData.getAllRoleMenus(id);
+    const existingIds = existing.map(r => r.menu_id);
 
-    // Simpan kembali menu baru
-    if (menu_ids.length > 0) {
-      await ModelData.addRoleMenus(id, menu_ids);
+    // 2. Loop semua menu yg dikirim dari frontend
+    for (let menu_id of menu_ids) {
+
+      // Jika sudah ada → UPDATE id_status = 1
+      if (existingIds.includes(menu_id)) {
+        await ModelData.updateRoleMenuStatus(id, menu_id, 1);
+      } else {
+        // Jika belum ada → INSERT baru
+        await ModelData.insertRoleMenu(id, menu_id);
+      }
+    }
+
+    // 3. Menu yg tidak dipilih → UPDATE id_status = 0
+    for (let oldMenuId of existingIds) {
+      if (!menu_ids.includes(oldMenuId)) {
+        await ModelData.updateRoleMenuStatus(id, oldMenuId, 0);
+      }
     }
 
     res.json({ message: "Hak akses berhasil diperbarui" });
@@ -136,4 +170,5 @@ exports.updateRoleMenus = async (req, res, next) => {
     next(err);
   }
 };
+
 
