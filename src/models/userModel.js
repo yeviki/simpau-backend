@@ -3,8 +3,14 @@ const db = require("../config/db");
 
 module.exports = {
   getAll() {
-    return db.query("SELECT id, username, email, role FROM syst_users ORDER BY id ASC");
+    return db.query(`
+      SELECT us.*, rl.roles_name
+      FROM syst_users us
+      JOIN syst_roles rl ON rl.id = us.roles_id
+      ORDER BY us.id ASC
+    `);
   },
+
 
   getById(id) {
     return db.execute("SELECT * FROM syst_users WHERE id = ?", [id]);
@@ -16,8 +22,8 @@ module.exports = {
 
   create(data) {
     return db.query(
-      "INSERT INTO syst_users (username, email, password, role) VALUES (?, ?, ?, ?)",
-      [data.username, data.email, data.password, data.role]
+      "INSERT INTO syst_users (fullname, username, email, password, roles_id) VALUES (?, ?, ?, ?, ?)",
+      [data.fullname, data.username, data.email, data.password, data.roles_id]
     );
   },
 

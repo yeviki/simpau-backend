@@ -22,10 +22,11 @@ exports.getUsers = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
+    const fullname = sanitize(req.body.fullname);
     const username = sanitize(req.body.username);
     const email = sanitize(req.body.email);
     const password = req.body.password;
-    const role = req.body.role;
+    const roles_id = req.body.roles_id;
 
     // VALIDASI
     if (!isEmail(email)) {
@@ -58,7 +59,7 @@ exports.createUser = async (req, res, next) => {
 
     // SIMPAN
     const hash = await bcrypt.hash(password, 10);
-    await User.create({ username, email, password: hash, role });
+    await User.create({ fullname, username, email, password: hash, roles_id });
 
     res.json({ message: "User berhasil ditambahkan" });
 
@@ -71,9 +72,10 @@ exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    const fullname = sanitize(req.body.fullname);
     const username = sanitize(req.body.username);
     const email = sanitize(req.body.email);
-    const role = req.body.role;
+    const roles_id = req.body.roles_id;
     const password = req.body.password;
 
     if (!isEmail(email)) {
@@ -101,7 +103,7 @@ exports.updateUser = async (req, res, next) => {
       }
     }
 
-    const data = { username, email, role };
+    const data = { fullname, username, email, roles_id };
 
     if (password && password.trim() !== "") {
       if (!isStrongPassword(password)) {

@@ -20,7 +20,7 @@ exports.login = async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, role: user.role },
+    { id: user.id, roles_id: user.roles_id },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES }
   );
@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
   res.json({
     message: "Login berhasil",
     token,
-    user: { id: user.id, name: user.name, role: user.role },
+    user: { id: user.id, name: user.name, roles_id: user.roles_id },
   });
 };
 
@@ -46,6 +46,6 @@ exports.me = async (req, res) => {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    roles_id: user.roles_id,
   });
 };

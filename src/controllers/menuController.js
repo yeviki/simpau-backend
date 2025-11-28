@@ -27,23 +27,27 @@ exports.createMenu = async (req, res, next) => {
     const icon_menu   = req.body.icon_menu;
     const parent_id   = req.body.parent_id || null;
 
-    // VALIDASI DUPLIKAT
-    const [exist] = await Menu.checkDuplicate(title_menu, url_menu);
-    if (exist.length > 0) {
-      const errors = {};
+    // SKIP VALIDATION jika "-" atau "#"
+    const skipValidation = (url_menu === "-" || url_menu === "#");
 
-      if (exist[0].title_menu === title_menu) {
-        errors.title_menu = "Title menu sudah digunakan";
-      }
-      if (exist[0].url_menu === url_menu) {
-        errors.url_menu = "Url menu sudah digunakan";
-      }
-      if (Object.keys(errors).length > 0) {
-        return fieldError(errors);
+    if (!skipValidation) {
+      // VALIDASI DUPLIKAT
+      const [exist] = await Menu.checkDuplicate(title_menu, url_menu);
+      if (exist.length > 0) {
+        const errors = {};
+
+        if (exist[0].title_menu === title_menu) {
+          errors.title_menu = "Title menu sudah digunakan";
+        }
+        if (exist[0].url_menu === url_menu) {
+          errors.url_menu = "Url menu sudah digunakan";
+        }
+        if (Object.keys(errors).length > 0) {
+          return fieldError(errors);
+        }
       }
     }
 
-    // SIMPAN
     await Menu.create({ title_menu, url_menu, icon_menu, order_menu, parent_id });
 
     res.json({ message: "Menu berhasil ditambahkan" });
@@ -63,18 +67,23 @@ exports.updateMenu = async (req, res, next) => {
     const order_menu = req.body.order_menu;
     const parent_id = req.body.parent_id || null;
 
-    const [exist] = await Menu.checkDuplicateOnUpdate(id, title_menu, url_menu);
+    // SKIP VALIDATION jika "-" atau "#"
+    const skipValidation = (url_menu === "-" || url_menu === "#");
 
-    if (exist.length > 0) {
-      const errors = {};
-      if (exist[0].title_menu === title_menu) {
-        errors.title_menu = "Title sudah digunakan";
-      }
-      if (exist[0].url_menu === url_menu) {
-        errors.url_menu = "Url sudah digunakan";
-      }
-      if (Object.keys(errors).length > 0) {
-        return fieldError(errors);
+    if (!skipValidation) {
+      const [exist] = await Menu.checkDuplicateOnUpdate(id, title_menu, url_menu);
+
+      if (exist.length > 0) {
+        const errors = {};
+        if (exist[0].title_menu === title_menu) {
+          errors.title_menu = "Title sudah digunakan";
+        }
+        if (exist[0].url_menu === url_menu) {
+          errors.url_menu = "Url sudah digunakan";
+        }
+        if (Object.keys(errors).length > 0) {
+          return fieldError(errors);
+        }
       }
     }
 
@@ -92,6 +101,7 @@ exports.updateMenu = async (req, res, next) => {
     next(err);
   }
 };
+
 
 exports.deleteMenu = async (req, res, next) => {
   try {
