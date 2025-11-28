@@ -16,8 +16,8 @@ exports.login = async (req, res) => {
 
   // --- cek user diblokir / tidak aktif ---
   if (user) {
-    if (user.blokir === "YA") {
-      return res.status(403).json({ message: "Akun Anda telah diblokir" });
+    if (user.blokir === "Ya") {
+      return res.status(403).json({ message: "Akun Anda telah diblokir!, Silahkan hubungi admin.!" });
     }
     if (user.id_status !== "Aktif") {
       return res.status(403).json({ message: "Akun Anda tidak aktif" });
