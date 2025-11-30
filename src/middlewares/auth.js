@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
   try {
-    // ambil token dari header Authorization: Bearer <token>
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ message: "Token tidak ditemukan" });
@@ -14,16 +13,16 @@ module.exports = (req, res, next) => {
       return res.status(401).json({ message: "Token tidak ditemukan" });
     }
 
-    // verifikasi token
+    // Verifikasi token (auto catch expired)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // tambahkan informasi user ke request object
-    req.user = decoded; // misal: { id, roles_id }
-
+    req.user = decoded;
     next();
+
   } catch (err) {
-    // jika token expired atau invalid
     console.error("Auth Middleware Error:", err.message);
-    return res.status(403).json({ message: "Token invalid atau expired" });
+
+    // Token expired / invalid harusnya status 401
+    return res.status(401).json({ message: "Token invalid atau expired" });
   }
 };

@@ -92,6 +92,25 @@ module.exports = {
     );
   },
 
+  getAllFiltered(currentRole) {
+  let query = `
+    SELECT us.*, rl.roles_name
+    FROM syst_users us
+    JOIN syst_roles rl ON rl.id = us.roles_id
+  `;
+
+  const params = [];
+
+  if (currentRole === 2) {
+    // jika local admin → sembunyikan superadmin
+    query += ` WHERE us.roles_id != 1 `;
+  }
+
+  query += ` ORDER BY us.id ASC `;
+
+  return db.query(query, params);
+}
+
   getAll() {
     return db.query(`
       SELECT us.*, rl.roles_name

@@ -3,7 +3,7 @@ const db = require("../config/db");
 module.exports = {
   getAll() {
     return db.query(`
-      SELECT id_menu, title_menu, url_menu, icon_menu, order_menu, parent_id 
+      SELECT id_menu, title_menu, url_menu, icon_menu, order_menu, parent_id, component 
       FROM syst_menu 
       ORDER BY id_menu ASC
     `);
@@ -13,12 +13,12 @@ module.exports = {
     return db.query("SELECT * FROM syst_menu WHERE id_menu = ?", [id]);
   },
 
-  create({ title_menu, url_menu, icon_menu, order_menu, parent_id }) {
+  create({ title_menu, url_menu, icon_menu, order_menu, parent_id, component }) {
     return db.query(
       `INSERT INTO syst_menu 
-        (title_menu, url_menu, icon_menu, order_menu, parent_id)
-       VALUES (?, ?, ?, ?, ?)`,
-      [title_menu, url_menu, icon_menu, order_menu, parent_id || null]
+        (title_menu, url_menu, icon_menu, order_menu, parent_id, component)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [title_menu, url_menu, icon_menu, order_menu, parent_id, component || null]
     );
   },
 

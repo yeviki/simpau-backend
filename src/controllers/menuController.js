@@ -26,6 +26,7 @@ exports.createMenu = async (req, res, next) => {
     const order_menu  = req.body.order_menu;
     const icon_menu   = req.body.icon_menu;
     const parent_id   = req.body.parent_id || null;
+    const component   = req.body.component;
 
     // SKIP VALIDATION jika "-" atau "#"
     const skipValidation = (url_menu === "-" || url_menu === "#");
@@ -48,7 +49,7 @@ exports.createMenu = async (req, res, next) => {
       }
     }
 
-    await Menu.create({ title_menu, url_menu, icon_menu, order_menu, parent_id });
+    await Menu.create({ title_menu, url_menu, icon_menu, order_menu, parent_id, component });
 
     res.json({ message: "Menu berhasil ditambahkan" });
 
@@ -61,11 +62,12 @@ exports.updateMenu = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const title_menu = sanitize(req.body.title_menu);
-    const url_menu = sanitize(req.body.url_menu);
-    const icon_menu = req.body.icon_menu;
-    const order_menu = req.body.order_menu;
-    const parent_id = req.body.parent_id || null;
+    const title_menu  = sanitize(req.body.title_menu);
+    const url_menu    = sanitize(req.body.url_menu);
+    const icon_menu   = req.body.icon_menu;
+    const order_menu  = req.body.order_menu;
+    const parent_id   = req.body.parent_id || null;
+    const component   = req.body.component;
 
     // SKIP VALIDATION jika "-" atau "#"
     const skipValidation = (url_menu === "-" || url_menu === "#");
@@ -87,7 +89,7 @@ exports.updateMenu = async (req, res, next) => {
       }
     }
 
-    const data = { title_menu, url_menu, icon_menu, order_menu, parent_id };
+    const data = { title_menu, url_menu, icon_menu, order_menu, parent_id, component };
 
     const [result] = await Menu.update(id, data);
 

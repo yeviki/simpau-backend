@@ -13,7 +13,10 @@ const fieldError = (fields, code = 400) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const [rows] = await User.getAll();
+    const currentRole = req.user.roles_id; // dari JWT decoded
+
+    const [rows] = await User.getAllFiltered(currentRole);
+    // const [rows] = await User.getAll();
     res.json(rows);
   } catch (err) {
     next(err);
