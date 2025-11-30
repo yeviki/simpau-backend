@@ -16,7 +16,10 @@ module.exports = (req, res, next) => {
     // Verifikasi token (auto catch expired)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = decoded;
+    // pastikan token memuat roles_id
+    // (tidak mengubah logika, hanya memastikan field ada)
+    req.user = decoded; // id, roles_id, dll…
+
     next();
 
   } catch (err) {

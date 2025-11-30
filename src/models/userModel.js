@@ -93,23 +93,26 @@ module.exports = {
   },
 
   getAllFiltered(currentRole) {
-  let query = `
-    SELECT us.*, rl.roles_name
-    FROM syst_users us
-    JOIN syst_roles rl ON rl.id = us.roles_id
-  `;
+    let query = `
+      SELECT 
+        us.*, 
+        rl.roles_name
+      FROM syst_users us
+      JOIN syst_roles rl ON rl.id = us.roles_id
+    `;
 
-  const params = [];
+    const params = [];
 
-  if (currentRole === 2) {
     // jika local admin → sembunyikan superadmin
-    query += ` WHERE us.roles_id != 1 `;
-  }
+    if (currentRole === 2) {
+      query += ` WHERE us.roles_id != ? `;
+      params.push(1); // hide superadmin
+    }
 
-  query += ` ORDER BY us.id ASC `;
+    query += ` ORDER BY us.id ASC `;
 
-  return db.query(query, params);
-}
+    return db.query(query, params);
+  },
 
   getAll() {
     return db.query(`

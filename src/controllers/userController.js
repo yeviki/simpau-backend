@@ -13,7 +13,11 @@ const fieldError = (fields, code = 400) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const currentRole = req.user.roles_id; // dari JWT decoded
+    const currentRole = req.user.roles_id; 
+
+    if (!currentRole) {
+      return res.status(400).json({ message: "roles_id tidak ditemukan dalam token" });
+    }
 
     const [rows] = await User.getAllFiltered(currentRole);
     // const [rows] = await User.getAll();
