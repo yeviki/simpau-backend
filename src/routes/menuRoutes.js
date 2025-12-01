@@ -17,14 +17,16 @@ const {
 // 4 Staf
 
 // Hanya adminsuper & adminlocal yang boleh CRUD users
-router.get("/", auth, role(1, 2, 3), getMenu);
+// router.get("/", auth, role(null, null, 1, 2, 3), getMenu); contoh jika set manual dan otomatis, jika ingin manual saja silahkan hapus null, null nya
+// router.get("/", auth, role(1, 2, 3), getMenu); // setting role manual saja
+router.get("/", auth, role(null, null, 1, 2, 3), getMenu);
 
-router.post("/", auth, role(1), createMenu);
+router.post("/", auth, role(null, null, 1), createMenu);
 // SEMENTARA (untuk buat user pertama)
 // router.post("/", createMenu);
 
-router.put("/:id", auth, role(1, 2), updateMenu);
+router.put("/:id", auth, role(null, null, 1, 2), updateMenu);
 
-router.delete("/:id", auth, role(1), deleteMenu);
+router.delete("/:id", auth, role(null, null, 1), deleteMenu);
 
 module.exports = router;

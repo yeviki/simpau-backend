@@ -1,5 +1,21 @@
 // middlewares/role.js
 
+// Setting Manual role
+// module.exports = (...allowedRoles) => {
+//   return (req, res, next) => {
+
+//     if (!req.user) {
+//       return res.status(401).json({ message: "User tidak terautentikasi" });
+//     }
+
+//      if (!allowedRoles.includes(req.user.roles_id)) {
+//       return res.status(403).json({ message: "Akses ditolak" });
+//     }
+
+//     next();
+//   };
+// };
+
 // MODE:
 // "manual" → menggunakan allowedRoles (seperti sebelumnya)
 // "dynamic" → cek izin dari database (tabel syst_roles_permissions)
@@ -8,12 +24,6 @@ const MODE = process.env.ROLE_MODE || "manual";
 // DB connection (gunakan sesuai project)
 const db = require("../config/db");
 
-/**
- * role(moduleName, controlName, ...allowedRoles)
- *
- * - Jika MODE = "manual": hanya cek allowedRoles seperti versi lama (tanpa DB).
- * - Jika MODE = "dynamic": cek permission role ke module/control di database.
- */
 module.exports = (moduleName, controlName, ...allowedRoles) => {
   return async (req, res, next) => {
 
@@ -31,7 +41,7 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
     if (MODE === "manual") {
       // contoh penggunaan: role(null, null, 1, 2, 3)
       if (!allowedRoles.includes(req.user.roles_id)) {
-        return res.status(403).json({ message: "Akses ditolak (manual mode)" });
+        return res.status(403).json({ message: "Peringatan.!! Aksi memerlukan level akses tinggi!!" });
       }
       return next(); // lolos
     }
@@ -86,3 +96,4 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
     });
   };
 };
+

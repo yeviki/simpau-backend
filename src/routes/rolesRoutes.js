@@ -19,24 +19,27 @@ const {
 // 3 Pimpinan
 // 4 Staf
 
+// router.get("/", auth, role(null, null, 1, 2, 3), getMenu); contoh jika set manual dan otomatis, jika ingin manual saja silahkan hapus null, null nya
+// router.get("/", auth, role(1, 2, 3), getRoles); // setting role manual saja
+
 // CRUD ROLES
-router.get("/", auth, role(1, 2, 3), getRoles);
-router.post("/", auth, role(1), createRoles);
-router.put("/:id", auth, role(1, 2), updateRoles);
-router.delete("/:id", auth, role(1), deleteRoles);
+router.get("/", auth, role(null, null, 1, 2, 3), getRoles);
+router.post("/", auth, role(null, null, 1), createRoles);
+router.put("/:id", auth, role(null, null, 1, 2), updateRoles);
+router.delete("/:id", auth, role(null, null, 1), deleteRoles);
 
 // ------------------------------
 // FIX: ubah route dari "/" agar tidak menimpa getRoles
 // ------------------------------
 
 // AMBIL SEMUA MENU
-router.get("/menu/all", auth, role(1, 2, 3), getMenu);
+router.get("/menu/all", auth, role(null, null, 1, 2, 3), getMenu);
 
 // MENU MILIK ROLE
-router.get("/:id/menus", auth, role(1, 2, 3), getRoleMenus);
+router.get("/:id/menus", auth, role(null, null, 1, 2, 3), getRoleMenus);
 
 // UPDATE MENU ROLE
-router.post("/:id/menus", auth, role(1), updateRoleMenus);
+router.post("/:id/menus", auth, role(null, null, 1), updateRoleMenus);
 
 module.exports = router;
 
