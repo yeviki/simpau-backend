@@ -3,21 +3,21 @@ const db = require("../config/db");
 
 module.exports = {
   getAll() {
-    return db.query("SELECT id, roles_name FROM syst_roles ORDER BY id ASC");
+    return db.query("SELECT id, module_name, label_module FROM syst_module ORDER BY id ASC");
   },
 
   getById(id) {
-    return db.execute("SELECT * FROM syst_roles WHERE id = ?", [id]);
+    return db.execute("SELECT * FROM syst_module WHERE id = ?", [id]);
   },
 
-  getByRoles(roles_name) {
-    return db.query("SELECT * FROM syst_roles WHERE roles_name = ?", [roles_name]);
+  getByRoles(module_name) {
+    return db.query("SELECT * FROM syst_module WHERE module_name = ?", [module_name]);
   },
 
   create(data) {
     return db.query(
-      "INSERT INTO syst_roles (roles_name) VALUES (?)",
-      [data.roles_name]
+      "INSERT INTO syst_module (module_name, label_module) VALUES (?, ?)",
+      [data.module_name, data.label_module]
     );
   },
 
@@ -32,90 +32,25 @@ module.exports = {
 
     values.push(id);
 
-    const sql = `UPDATE syst_roles SET ${fields.join(", ")} WHERE id=?`;
+    const sql = `UPDATE syst_module SET ${fields.join(", ")} WHERE id=?`;
     return db.query(sql, values);
   },
 
   delete(id) {
-    return db.query("DELETE FROM syst_roles WHERE id=?", [id]);
+    return db.query("DELETE FROM syst_module WHERE id=?", [id]);
   },
 
-  checkDuplicate(roles_name) {
+  checkDuplicate(module_name) {
     return db.query(
-      "SELECT id, roles_name FROM syst_roles WHERE (roles_name = ?)",
-      [roles_name]
+      "SELECT id, module_name FROM syst_module WHERE (module_name = ?)",
+      [module_name]
     );
   },
 
-  checkDuplicateOnUpdate(id, roles_name) {
+  checkDuplicateOnUpdate(id, module_name) {
     return db.query(
-      "SELECT id, roles_name FROM syst_roles WHERE (roles_name = ?) AND id != ?",
-      [roles_name, id]
-    );
-  },
-
-  // ------------------------------------------------ //
-  // Ambil menu apa saja yang dimiliki role ini
-  getAllMenu() {
-      return db.query(`
-        SELECT id_menu, title_menu, url_menu, icon_menu, order_menu, parent_id 
-        FROM syst_menu 
-        ORDER BY id_menu ASC
-      `);
-    },
-
-  getRoleMenus(roles_id) {
-    return db.query(
-      "SELECT menu_id FROM syst_roles_menu WHERE id_status = 1 AND roles_id = ?",
-      [roles_id]
-    );
-  },
-
-  checkRoleMenu(roles_id, menu_id) {
-    return db.query(
-      "SELECT * FROM syst_roles_menu WHERE roles_id = ? AND menu_id = ?",
-      [roles_id, menu_id]
-    );
-  },
-
-  insertRoleMenu(roles_id, menu_id) {
-    return db.query(
-      "INSERT INTO syst_roles_menu (roles_id, menu_id, id_status) VALUES (?, ?, 1)",
-      [roles_id, menu_id]
-    );
-  },
-
-  updateRoleMenuStatus(roles_id, menu_id, status) {
-    return db.query(
-      "UPDATE syst_roles_menu SET id_status = ? WHERE roles_id = ? AND menu_id = ?",
-      [status, roles_id, menu_id]
-    );
-  },
-
-  getAllRoleMenus(roles_id) {
-    return db.query(
-      "SELECT menu_id FROM syst_roles_menu WHERE roles_id = ?",
-      [roles_id]
-    );
-  },
-
-  // Hapus semua menu pada role ini
-  deleteRoleMenus(roles_id) {
-    return db.query(
-      "DELETE FROM syst_roles_menu WHERE roles_id = ?",
-      [roles_id]
-    );
-  },
-
-  // Simpan menu baru (pivot)
-  addRoleMenus(roles_id, menu_ids) {
-    if (menu_ids.length === 0) return Promise.resolve([true]);
-
-    const values = menu_ids.map(menu_id => [roles_id, menu_id]);
-
-    return db.query(
-      "INSERT INTO syst_roles_menu (roles_id, menu_id) VALUES ?",
-      [values]
+      "SELECT id, module_name FROM syst_module WHERE (module_name = ?) AND id != ?",
+      [module_name, id]
     );
   }
 

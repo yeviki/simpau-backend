@@ -29,6 +29,8 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/menu", require("./routes/menuRoutes"));
 app.use("/api/roles", require("./routes/rolesRoutes"));
+app.use("/api/module", require("./routes/moduleRoutes"));
+app.use("/api/control", require("./routes/controlRoutes"));
 
 // ============================================================
 // ============== GLOBAL ERROR HANDLER ========================

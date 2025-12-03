@@ -1,5 +1,5 @@
-// controllers/rolesController.js
-const ModelData = require("../models/rolesModel");
+// controllers/moduleController.js
+const ModelData = require("../models/moduleModel");
 const { sanitize } = require("../utils/validate");
 
 // Helper untuk error per-field
@@ -21,15 +21,16 @@ exports.getModule = async (req, res, next) => {
 
 exports.createModule = async (req, res, next) => {
   try {
-    const roles_name  = sanitize(req.body.roles_name);
+    const module_name  = sanitize(req.body.module_name);
+    const label_module  = sanitize(req.body.label_module);
 
     // VALIDASI DUPLIKAT
-    const [exist] = await ModelData.checkDuplicate(roles_name);
+    const [exist] = await ModelData.checkDuplicate(module_name);
     if (exist.length > 0) {
       const errors = {};
 
-      if (exist[0].roles_name === roles_name) {
-        errors.roles_name = "Nama module sudah digunakan";
+      if (exist[0].module_name === module_name) {
+        errors.module_name = "Nama module sudah digunakan";
       }
       if (Object.keys(errors).length > 0) {
         return fieldError(errors);
@@ -37,9 +38,9 @@ exports.createModule = async (req, res, next) => {
     }
 
     // SIMPAN
-    await ModelData.create({ roles_name });
+    await ModelData.create({ module_name, label_module });
 
-    res.json({ message: "Modul berhasil ditambahkan" });
+    res.json({ message: "Module berhasil ditambahkan" });
 
   } catch (err) {
     next(err);
@@ -50,21 +51,22 @@ exports.updateModule = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const roles_name = sanitize(req.body.roles_name);
+    const module_name = sanitize(req.body.module_name);
+    const label_module = sanitize(req.body.label_module);
 
-    const [exist] = await ModelData.checkDuplicateOnUpdate(id, roles_name);
+    const [exist] = await ModelData.checkDuplicateOnUpdate(id, module_name);
 
     if (exist.length > 0) {
       const errors = {};
-      if (exist[0].roles_name === roles_name) {
-        errors.roles_name = "Module sudah digunakan";
+      if (exist[0].module_name === module_name) {
+        errors.module_name = "Module sudah digunakan";
       }
       if (Object.keys(errors).length > 0) {
         return fieldError(errors);
       }
     }
 
-    const data = { roles_name };
+    const data = { module_name, label_module };
 
     const [result] = await ModelData.update(id, data);
 

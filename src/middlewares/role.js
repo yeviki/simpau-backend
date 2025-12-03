@@ -41,7 +41,9 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
     if (MODE === "manual") {
       // contoh penggunaan: role(null, null, 1, 2, 3)
       if (!allowedRoles.includes(req.user.roles_id)) {
-        return res.status(403).json({ message: "Peringatan.!! Aksi memerlukan level akses tinggi!!" });
+        return res.status(403).json({
+          message: "Peringatan.!! Aksi memerlukan level akses tinggi!!"
+        });
       }
       return next(); // lolos
     }
@@ -72,7 +74,7 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
           [roleId, moduleName, controlName]
         );
 
-        // jika tidak ada permission → tolak
+        // Jika tidak ada permission → tolak
         if (rows.length === 0) {
           return res.status(403).json({
             message: "Akses ditolak (dynamic mode: permission tidak ditemukan)"
