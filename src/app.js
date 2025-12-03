@@ -32,6 +32,9 @@ app.use("/api/roles", require("./routes/rolesRoutes"));
 app.use("/api/module", require("./routes/moduleRoutes"));
 app.use("/api/control", require("./routes/controlRoutes"));
 
+// Untuk Combobox
+app.use("/api/master", require("./routes/masterRoutes"));
+
 // ============================================================
 // ============== GLOBAL ERROR HANDLER ========================
 // ============================================================

@@ -23,6 +23,7 @@ exports.createControl = async (req, res, next) => {
   try {
     const control_name    = sanitize(req.body.control_name);
     const label_control   = sanitize(req.body.label_control);
+    const id_status   = sanitize(req.body.id_status);
 
     // VALIDASI DUPLIKAT
     const [exist] = await ModelData.checkDuplicate(control_name);
@@ -38,7 +39,7 @@ exports.createControl = async (req, res, next) => {
     }
 
     // SIMPAN
-    await ModelData.create({ control_name, label_control });
+    await ModelData.create({ control_name, label_control, id_status });
 
     res.json({ message: "Control berhasil ditambahkan" });
 
@@ -51,8 +52,9 @@ exports.updateControl = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const control_name = sanitize(req.body.control_name);
+    const control_name  = sanitize(req.body.control_name);
     const label_control = sanitize(req.body.label_control);
+    const id_status     = req.body.id_status;
 
     const [exist] = await ModelData.checkDuplicateOnUpdate(id, control_name);
 
@@ -66,7 +68,7 @@ exports.updateControl = async (req, res, next) => {
       }
     }
 
-    const data = { control_name, label_control };
+    const data = { control_name, label_control, id_status };
 
     const [result] = await ModelData.update(id, data);
 
