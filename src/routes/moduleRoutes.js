@@ -20,10 +20,10 @@ const {
 // router.get("/", auth, role(1, 2, 3), getModule); // setting role manual saja
 
 // CRUD ROLES
-router.get("/", auth, role(null, null, 1, 2, 3), getModule);
-router.post("/", auth, role(null, null, 1), createModule);
-router.put("/:id", auth, role(null, null, 1, 2), updateModule);
-router.delete("/:id", auth, role(null, null, 1), deleteModule);
+router.get("/", auth, role("module", "index"), getModule);
+router.post("/", auth, role("module", "create"), createModule);
+router.put("/:id", auth, role("module", "update"), updateModule);
+router.delete("/:id", auth, role("module", "delete"), deleteModule);
 
 module.exports = router;
 

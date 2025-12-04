@@ -277,6 +277,62 @@ exports.deletePermission = async (req, res, next) => {
   }
 };
 
+exports.savePermission = async (req, res) => {
+  try {
+    const { roles_id, module_id, control_id, id_status } = req.body;
+
+    if (!roles_id || !module_id) {
+      return res.status(400).json({
+        message: "roles_id dan module_id wajib diisi"
+      });
+    }
+
+    if (!control_id || (Array.isArray(control_id) && control_id.length === 0)) {
+      return res.status(400).json({
+        message: "Minimal pilih satu control"
+      });
+    }
+
+    // Pastikan array of id
+    const controlIds = Array.isArray(control_id) ? control_id.map(c => c.id ?? c) : [control_id];
+
+    // -----------------------------
+    // AMBIL CONTROL YANG SUDAH ADA
+    // -----------------------------
+    const existingControls = await ModelData.getExistingControls(roles_id, module_id);
+
+    // filter controlIds baru
+    const newControlIds = controlIds.filter(id => !existingControls.includes(id));
+
+    if (newControlIds.length === 0) {
+      return res.json({
+        success: true,
+        message: "Tidak ada control baru untuk disimpan"
+      });
+    }
+
+    // -----------------------------
+    // SIMPAN CONTROL BARU
+    // -----------------------------
+    const result = await ModelData.savePermission(roles_id, module_id, newControlIds, id_status ?? 1);
+
+    return res.json({
+      success: true,
+      message: "Permission berhasil disimpan",
+      inserted: result[0]?.affectedRows ?? null
+    });
+
+  } catch (error) {
+    console.error("❌ ERROR savePermission:", error);
+    return res.status(500).json({
+      message: "Gagal menyimpan permission",
+      error: error.message
+    });
+  }
+};
+
+
+
 
 
 

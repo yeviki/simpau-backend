@@ -3,7 +3,7 @@ const router = require("express").Router();
 const auth = require("../middlewares/auth");
 const role = require("../middlewares/role");
 
-// Deklarasikan seluruh controler yang sudah dibuatkan
+// Import controller
 const {
   getRoles,
   createRoles,
@@ -15,55 +15,82 @@ const {
   getPermissionGrouped,
   updateStatusPermission,
   deletePermission,
+  savePermission, // <-- tambahkan
 } = require("../controllers/rolesController");
 
+const {
+  getModule
+} = require("../controllers/moduleController");
+
+const {
+  getControl
+} = require("../controllers/controlController");
+
+// --------------------------------------
+// ROLE SETTINGS
 // 1 Super Admin
 // 2 Local Admin
 // 3 Pimpinan
 // 4 Staf
-
-// router.get("/", auth, role(null, null, 1, 2, 3), getMenu); contoh jika set manual dan otomatis, jika ingin manual saja silahkan hapus null, null nya
-// router.get("/", auth, role(1, 2, 3), getRoles); // setting role manual saja
+// --------------------------------------
 
 // CRUD ROLES
-router.get("/", auth, role(null, null, 1, 2, 3), getRoles);
-router.post("/", auth, role(null, null, 1), createRoles);
-router.put("/:id", auth, role(null, null, 1, 2), updateRoles);
-router.delete("/:id", auth, role(null, null, 1), deleteRoles);
+router.get("/", auth, role("roles", "index"), getRoles);
+router.post("/", auth, role("roles", "create"), createRoles);
+router.put("/:id", auth, role("roles", "update"), updateRoles);
+router.delete("/:id", auth, role("roles", "delete"), deleteRoles);
 
-// ------------------------------
-// FIX: ubah route dari "/" agar tidak menimpa getRoles
-// ------------------------------
+// --------------------------------------
+// MENU MANAGEMENT
+// --------------------------------------
 
-// AMBIL SEMUA MENU
-router.get("/menu/all", auth, role(null, null, 1, 2, 3), getMenu);
+// list semua menu
+router.get("/menu/all", auth, role("roles", "detailList"), getMenu);
 
-// MENU MILIK ROLE
-router.get("/:id/menus", auth, role(null, null, 1, 2, 3), getRoleMenus);
+// tampilkan menu milik role tertentu dan checklist menu yang terdaftar
+router.get("/:id/menus", auth, role("roles", "setDetail"), getRoleMenus);
 
-// UPDATE MENU ROLE
-router.post("/:id/menus", auth, role(null, null, 1), updateRoleMenus);
+// update menu yg dimiliki role
+router.post("/:id/menus", auth, role("roles", "updateDetail"), updateRoleMenus);
 
-// ------------------------------
-// Data Roles Permission
-// routes/rolesRoutes.js
-// ------------------------------
-// AMBIL SEMUA MODULE DAN CONTROL PADA TABEL syst_roles_permission
-// router.get("/permission/all", auth, role(null, null, 1, 2, 3), getPermission);
-router.get("/permission/:id/grouped", auth, role(null, null, 1, 2, 3), getPermissionGrouped);
+// --------------------------------------
+// PERMISSION MANAGEMENT
+// --------------------------------------
+
+// Ambil Data Module dan Control untuk Combobox
+// router.get("/getModule", auth, role("roles", "detailList"), getModule);
+// router.get("/getControl", auth, role("roles", "detailList"), getControl);
+
+// 1. Simpan permission baru
+router.post(
+  "/permission",
+  auth,
+  role("roles", "setDetail"),   // hanya super admin
+  savePermission
+);
+
+// 2. Ambil permission (group by module -> control)
+router.get(
+  "/permission/:id/grouped",
+  auth,
+  role("roles", "detailList"),
+  getPermissionGrouped
+);
+
+// 3. Update status permission id (aktif/nonaktif)
 router.post(
   "/permission/:id/status",
   auth,
-  role(null, null, 1, 2, 3),
+  role("roles", "updateDetail"),
   updateStatusPermission
 );
 
+// 4. Hapus permission tertentu
 router.delete(
   "/permission/:id",
   auth,
-  role(null, null, 1, 2, 3),
+  role("roles", "deleteDetail"),  // hanya super admin
   deletePermission
 );
 
 module.exports = router;
-

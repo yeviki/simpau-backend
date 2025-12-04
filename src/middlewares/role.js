@@ -34,6 +34,11 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
       return res.status(401).json({ message: "User tidak terautentikasi" });
     }
 
+    // ❌ Bypass jika moduleName dan controlName null → langsung next()
+    if (moduleName === null && controlName === null) {
+      return next();
+    }
+
     //
     // 2. MODE MANUAL → gunakan cara lama (allowedRoles)
     //    Tidak pakai database. Persis seperti versi original kamu.
@@ -42,7 +47,7 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
       // contoh penggunaan: role(null, null, 1, 2, 3)
       if (!allowedRoles.includes(req.user.roles_id)) {
         return res.status(403).json({
-          message: "Peringatan.!! Aksi memerlukan level akses tinggi!!"
+          message: "Peringatan.!! Akses tidak berhak terdeteksi memerlukan hak akses tertinggi!!"
         });
       }
       return next(); // lolos
@@ -77,7 +82,7 @@ module.exports = (moduleName, controlName, ...allowedRoles) => {
         // Jika tidak ada permission → tolak
         if (rows.length === 0) {
           return res.status(403).json({
-            message: "Akses ditolak (dynamic mode: permission tidak ditemukan)"
+            message: "Peringatan.!! Akses tidak berhak terdeteksi memerlukan hak akses tertinggi!!"
           });
         }
 

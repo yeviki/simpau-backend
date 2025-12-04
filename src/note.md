@@ -14,3 +14,9 @@ router.post("/", auth, role("menu", "create"), createMenu);
 router.put("/:id", auth, role("menu", "update"), updateMenu);
 router.delete("/:id", auth, role("menu", "delete"), deleteMenu);
 ```
+
+Untuk bypass routes seperti dibawah ini :
+```
+// GET COMBO STATUS → bypass pengecekan role
+router.get("/combo-status", auth, role(null, null), getComboStatus);
+```

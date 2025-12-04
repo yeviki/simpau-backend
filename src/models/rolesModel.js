@@ -119,14 +119,6 @@ module.exports = {
   // models/rolesModel.js
   // Ambil menu apa saja yang dimiliki role ini
   // ------------------------------------------------ //
-  getAllPermission() {
-    return db.query(`
-      SELECT id, roles_id, module_id, control_id, id_status 
-      FROM syst_roles_permissions 
-      ORDER BY id ASC
-    `);
-  },
-
   getAllPermissionWithModuleControl(roleId) {
     return db.query(`
       SELECT 
@@ -158,5 +150,42 @@ module.exports = {
   deletePermRoles(id) {
     return db.query("DELETE FROM syst_roles_permissions WHERE id=?", [id]);
   },
+
+  // =========================== //
+  //  Simpan PERMISSION baru
+  // =========================== //
+  savePermission(roles_id, module_id, controlIds, id_status) {
+    if (!Array.isArray(controlIds) || controlIds.length === 0) {
+      return Promise.resolve([true]);
+    }
+
+    const sql = `
+      INSERT INTO syst_roles_permissions
+      (roles_id, module_id, control_id, id_status)
+      VALUES ?
+    `;
+
+    const values = controlIds.map(control_id => [
+      roles_id,
+      module_id,
+      control_id,
+      id_status
+    ]);
+
+    return db.query(sql, [values]);
+  },
+
+  // Ambil control_id yang sudah ada untuk roles_id + module_id
+  getExistingControls(roles_id, module_id) {
+    const sql = `
+      SELECT control_id 
+      FROM syst_roles_permissions
+      WHERE roles_id = ? AND module_id = ?
+    `;
+    return db.query(sql, [roles_id, module_id])
+      .then(([rows]) => rows.map(r => r.control_id));
+  }
+
+
 
 };
