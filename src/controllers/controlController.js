@@ -23,7 +23,7 @@ exports.createControl = async (req, res, next) => {
   try {
     const control_name    = sanitize(req.body.control_name);
     const label_control   = sanitize(req.body.label_control);
-    const id_status   = sanitize(req.body.id_status);
+    const id_status       = req.body.id_status;
 
     // VALIDASI DUPLIKAT
     const [exist] = await ModelData.checkDuplicate(control_name);

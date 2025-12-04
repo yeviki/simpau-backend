@@ -21,8 +21,9 @@ exports.getModule = async (req, res, next) => {
 
 exports.createModule = async (req, res, next) => {
   try {
-    const module_name  = sanitize(req.body.module_name);
+    const module_name   = sanitize(req.body.module_name);
     const label_module  = sanitize(req.body.label_module);
+    const id_status       = req.body.id_status;
 
     // VALIDASI DUPLIKAT
     const [exist] = await ModelData.checkDuplicate(module_name);
@@ -38,7 +39,7 @@ exports.createModule = async (req, res, next) => {
     }
 
     // SIMPAN
-    await ModelData.create({ module_name, label_module });
+    await ModelData.create({ module_name, label_module, id_status });
 
     res.json({ message: "Module berhasil ditambahkan" });
 
@@ -51,8 +52,9 @@ exports.updateModule = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const module_name = sanitize(req.body.module_name);
-    const label_module = sanitize(req.body.label_module);
+    const module_name     = sanitize(req.body.module_name);
+    const label_module    = sanitize(req.body.label_module);
+    const id_status       = req.body.id_status;
 
     const [exist] = await ModelData.checkDuplicateOnUpdate(id, module_name);
 
@@ -66,7 +68,7 @@ exports.updateModule = async (req, res, next) => {
       }
     }
 
-    const data = { module_name, label_module };
+    const data = { module_name, label_module, id_status };
 
     const [result] = await ModelData.update(id, data);
 

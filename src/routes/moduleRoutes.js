@@ -8,10 +8,7 @@ const {
   getModule,
   createModule,
   updateModule,
-  deleteModule,
-//   getMenu,
-//   getRoleMenus,
-//   updateRoleMenus,
+  deleteModule
 } = require("../controllers/moduleController");
 
 // 1 Super Admin
@@ -27,19 +24,6 @@ router.get("/", auth, role(null, null, 1, 2, 3), getModule);
 router.post("/", auth, role(null, null, 1), createModule);
 router.put("/:id", auth, role(null, null, 1, 2), updateModule);
 router.delete("/:id", auth, role(null, null, 1), deleteModule);
-
-// ------------------------------
-// FIX: ubah route dari "/" agar tidak menimpa getModule
-// ------------------------------
-
-// // AMBIL SEMUA MENU
-// router.get("/menu/all", auth, role(null, null, 1, 2, 3), getMenu);
-
-// // MENU MILIK ROLE
-// router.get("/:id/menus", auth, role(null, null, 1, 2, 3), getRoleMenus);
-
-// // UPDATE MENU ROLE
-// router.post("/:id/menus", auth, role(null, null, 1), updateRoleMenus);
 
 module.exports = router;
 

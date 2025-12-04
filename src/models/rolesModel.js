@@ -57,24 +57,17 @@ module.exports = {
   // ------------------------------------------------ //
   // Ambil menu apa saja yang dimiliki role ini
   getAllMenu() {
-      return db.query(`
-        SELECT id_menu, title_menu, url_menu, icon_menu, order_menu, parent_id 
-        FROM syst_menu 
-        ORDER BY id_menu ASC
-      `);
-    },
+    return db.query(`
+      SELECT id_menu, title_menu, url_menu, icon_menu, order_menu, parent_id 
+      FROM syst_menu 
+      ORDER BY id_menu ASC
+    `);
+  },
 
   getRoleMenus(roles_id) {
     return db.query(
       "SELECT menu_id FROM syst_roles_menu WHERE id_status = 1 AND roles_id = ?",
       [roles_id]
-    );
-  },
-
-  checkRoleMenu(roles_id, menu_id) {
-    return db.query(
-      "SELECT * FROM syst_roles_menu WHERE roles_id = ? AND menu_id = ?",
-      [roles_id, menu_id]
     );
   },
 
@@ -117,6 +110,53 @@ module.exports = {
       "INSERT INTO syst_roles_menu (roles_id, menu_id) VALUES ?",
       [values]
     );
-  }
+  },
+  // Tutup
+  // ------------------------------------------------ //
+
+
+  // ------------------------------------------------ //
+  // models/rolesModel.js
+  // Ambil menu apa saja yang dimiliki role ini
+  // ------------------------------------------------ //
+  getAllPermission() {
+    return db.query(`
+      SELECT id, roles_id, module_id, control_id, id_status 
+      FROM syst_roles_permissions 
+      ORDER BY id ASC
+    `);
+  },
+
+  getAllPermissionWithModuleControl(roleId) {
+    return db.query(`
+      SELECT 
+        p.id, 
+        p.roles_id, 
+        p.module_id, 
+        p.control_id, 
+        p.id_status,
+        m.module_name, 
+        c.control_name,
+        c.label_control
+      FROM syst_roles_permissions p
+      LEFT JOIN syst_module m ON p.module_id = m.id
+      LEFT JOIN syst_control c ON p.control_id = c.id
+      WHERE p.roles_id = ?
+      ORDER BY p.module_id ASC, p.control_id ASC
+    `, [roleId]);
+  },
+
+  updatePermissionStatus(id, id_status) {
+    return db.query(
+      `UPDATE syst_roles_permissions 
+      SET id_status = ? 
+      WHERE id = ?`,
+      [id_status, id]
+    ).then(([result]) => result);
+  },
+
+  deletePermRoles(id) {
+    return db.query("DELETE FROM syst_roles_permissions WHERE id=?", [id]);
+  },
 
 };

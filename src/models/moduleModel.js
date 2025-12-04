@@ -3,7 +3,7 @@ const db = require("../config/db");
 
 module.exports = {
   getAll() {
-    return db.query("SELECT id, module_name, label_module FROM syst_module ORDER BY id ASC");
+    return db.query("SELECT id, module_name, label_module, id_status FROM syst_module ORDER BY id ASC");
   },
 
   getById(id) {
@@ -16,8 +16,8 @@ module.exports = {
 
   create(data) {
     return db.query(
-      "INSERT INTO syst_module (module_name, label_module) VALUES (?, ?)",
-      [data.module_name, data.label_module]
+      "INSERT INTO syst_module (module_name, label_module, id_status) VALUES (?, ?, ?)",
+      [data.module_name, data.label_module, data.id_status]
     );
   },
 
@@ -53,5 +53,4 @@ module.exports = {
       [module_name, id]
     );
   }
-
 };

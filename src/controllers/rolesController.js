@@ -171,4 +171,113 @@ exports.updateRoleMenus = async (req, res, next) => {
   }
 };
 
+// --------------------------------------------- //
+
+
+// --------------------------------------------- //
+// controllers/rolesController.js
+// Detail Roles Permission
+// --------------------------------------------- //
+exports.getPermission = async (req, res, next) => {
+  try {
+    const [rows] = await ModelData.getAllMenu();
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getPermissionGrouped = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await ModelData.getAllPermissionWithModuleControl(id);
+
+    // Jika tidak ada data, tetap kirim array kosong
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+
+    const grouped = {};
+
+    rows.forEach(r => {
+      if (!grouped[r.module_id]) {
+        grouped[r.module_id] = {
+          module_id: r.module_id,
+          module_name: r.module_name,
+          controls: []
+        };
+      }
+
+      grouped[r.module_id].controls.push({
+        id: r.id,
+        control_id: r.control_id,
+        control_name: r.control_name,
+        label_control: r.label_control,
+        id_status: r.id_status
+      });
+    });
+
+    res.json(Object.values(grouped)); // array hasil grouping
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateStatusPermission = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { id_status } = req.body;
+
+    if (id_status === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "id_status required"
+      });
+    }
+
+    const result = await ModelData.updatePermissionStatus(id, id_status);
+
+    if (!result || result.affectedRows === 0) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Status updated",
+      id,
+      id_status
+    });
+
+  } catch (err) {
+    console.error("Error update status:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+exports.deletePermission = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await ModelData.deletePermRoles(id);
+    if (result.affectedRows === 0) {
+      return fieldError({ general: "Permission roles tidak ditemukan" }, 404);
+    }
+
+    res.json({ message: "Permission roles berhasil dihapus" });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
 
