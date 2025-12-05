@@ -20,3 +20,15 @@ Untuk bypass routes seperti dibawah ini :
 // GET COMBO STATUS → bypass pengecekan role
 router.get("/combo-status", auth, role(null, null), getComboStatus);
 ```
+
+
+Table: app_settings
+id | key               | value
+1  | application_mode  | normal
+
+
+Value yang mungkin:
+
+normal
+
+maintenance

@@ -1,7 +1,7 @@
 // controllers/authController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
+const Mauth = require("../models/authModel");
 
 // --- Controller ---
 exports.login = async (req, res) => {
@@ -10,7 +10,7 @@ exports.login = async (req, res) => {
   const now = new Date();
 
   // --- ambil data user ---
-  const [rows] = await User.getByIdentifier(identifier);
+  const [rows] = await Mauth.getByIdentifier(identifier);
   const userExists = rows.length > 0;
   const user = userExists ? rows[0] : null;
 
@@ -26,8 +26,12 @@ exports.login = async (req, res) => {
 
   // --- user tidak ditemukan ---
   if (!userExists) {
-    await User.saveLoginHistory(null, "failed", req, identifier);
-    const [failRaw] = await User.countFailedLogins(identifier);
+    // --- simpan histori login jika gagal ---
+    await Mauth.saveLoginHistory(null, "failed", req, identifier);
+
+    // --- update fail_count tambah count jika gagal di tabel user ---
+    const [failRaw] = await Mauth.countFailedLogins(identifier);
+
     const failCount = failRaw[0].failCount || 0;
     const sisa = 10 - failCount;
 
@@ -58,14 +62,16 @@ exports.login = async (req, res) => {
     }
 
     // --- update fail_count & blocked_until di tabel user ---
-    await User.updateFailedLoginMeta(user.id, failCount, blockedUntil);
+    await Mauth.updateFailedLoginMeta(user.id, failCount, blockedUntil);
 
     // --- simpan history ---
-    await User.saveLoginHistory(user.id, "failed", req, identifier);
+    await Mauth.saveLoginHistory(user.id, "failed", req, identifier);
 
     // --- BLOKIR PERMANEN ---
     if (failCount >= 10) {
-      await User.blockUser(user.id);
+      // --- Set blokir users berdasarkan id ---  
+      await Mauth.blockUser(user.id);
+
       return res.status(403).json({
         message: "Akun diblokir karena terlalu banyak percobaan login gagal! Hubungi admin."
       });
@@ -89,10 +95,10 @@ exports.login = async (req, res) => {
   }
 
   // --- login berhasil ---
-  await User.saveLoginHistory(user.id, "success", req, identifier);
+  await Mauth.saveLoginHistory(user.id, "success", req, identifier);
 
   // --- reset fail count & unblock user ---
-  await User.updateFailedLoginMeta(user.id, 0);
+  await Mauth.updateFailedLoginMeta(user.id, 0);
 
   // --- generate token ---
   const token = jwt.sign(
@@ -150,7 +156,8 @@ exports.login = async (req, res) => {
 exports.getMenu = async (req, res) => {
   const roles_id = req.user.roles_id;
 
-  const [rows] = await User.getMenuByRole(roles_id);
+  // --- Get Menu Dinamis By Roles ID Users ---
+  const [rows] = await Mauth.getMenuByRole(roles_id);
 
   res.json({
     success: true,
@@ -160,7 +167,8 @@ exports.getMenu = async (req, res) => {
 
 // ---- GET /auth/me ----
 exports.me = async (req, res) => {
-  const [rows] = await User.getById(req.user.id);
+  // --- Get By Id ---
+  const [rows] = await Mauth.getById(req.user.id);
 
   if (rows.length === 0) {
     return res.status(404).json({ message: "User tidak ditemukan" });
@@ -187,7 +195,7 @@ exports.logout = async (req, res) => {
     }
 
     // update logout_time di record login terakhir user yang status = 'success' dan logout_time masih NULL
-    await User.updateLogoutTime(user_id);
+    await Mauth.updateLogoutTime(user_id);
 
     return res.json({ message: "Logout berhasil" });
   } catch (err) {

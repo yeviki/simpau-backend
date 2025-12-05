@@ -331,6 +331,24 @@ exports.savePermission = async (req, res) => {
   }
 };
 
+// Control setting configurasi aplikasi maintenance / normal
+exports.setMaintenanceMode = async (req, res) => {
+  const { mode } = req.body;
+
+  await db.query(
+    "UPDATE app_settings SET value = ? WHERE key='application_mode'",
+    [mode]
+  );
+
+  if (mode === "maintenance") {
+    // logout paksa semua user
+    await db.query("UPDATE users SET force_logout = 1");
+  }
+
+  return res.json({ status: true, message: "Mode aplikasi diperbarui" });
+};
+
+
 
 
 
