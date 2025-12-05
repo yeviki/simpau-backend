@@ -22,6 +22,9 @@ exports.login = async (req, res) => {
     if (user.id_status !== "Aktif") {
       return res.status(403).json({ message: "Akun Anda tidak aktif" });
     }
+    if (user.force_logout !== 0) {
+      return res.status(403).json({ message: "Sistem sedang dalam perbaikan, Harap coba lagi nanti" });
+    }
   }
 
   // --- user tidak ditemukan ---

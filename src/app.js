@@ -31,6 +31,8 @@ app.use("/api/menu", require("./routes/menuRoutes"));
 app.use("/api/roles", require("./routes/rolesRoutes"));
 app.use("/api/module", require("./routes/moduleRoutes"));
 app.use("/api/control", require("./routes/controlRoutes"));
+app.use("/api/system", require("./routes/systemRoutes"));
+
 
 // Untuk Combobox
 app.use("/api/master", require("./routes/masterRoutes"));
