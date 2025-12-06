@@ -13,6 +13,21 @@ exports.getComboStatus = async (req, res, next) => {
   }
 };
 
+exports.getComboRoles = async (req, res, next) => {
+  try {
+    const currentRole = req.user.roles_id;
+
+    if (!currentRole) {
+      return res.status(400).json({ message: "Roles tidak ditemukan dalam token" });
+    }
+
+    const [rows] = await ModelData.getComboAkses(currentRole);
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getStats = async (req, res, next) => {
   try {
     const [users] = await ModelData.getTotalUsers();

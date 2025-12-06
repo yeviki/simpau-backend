@@ -1,6 +1,6 @@
 // routes/authRoutes.js
 const router = require("express").Router();
-const { login, logout, getMenu, me } = require("../controllers/authController");
+const { login, selectRole, logout, getMenu, me } = require("../controllers/authController");
 const authMiddleware = require("../middlewares/auth");
 
 // 1 Super Admin
@@ -10,6 +10,9 @@ const authMiddleware = require("../middlewares/auth");
 
 // POST /auth/login
 router.post("/login", login);
+
+router.post("/select-role", selectRole); // <= tambahan
+
 router.post("/logout", authMiddleware, logout);
 
 // GET /auth/me (protected)

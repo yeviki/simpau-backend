@@ -93,10 +93,35 @@ module.exports = {
         );
     },
     
-    getById(id) {
-    return db.execute(`SELECT us.*, rl.roles_name
-        FROM syst_users us
-        JOIN syst_roles rl ON rl.id = us.roles_id WHERE us.id = ?`, [id]);
+    getByIdWithRole(userId, roleId) {
+      return db.execute(`
+          SELECT 
+            us.id,
+            us.email,
+            m.roles_id,
+            rl.roles_name
+          FROM syst_users us
+          INNER JOIN syst_users_roles m ON m.users_id = us.id
+          INNER JOIN syst_roles rl ON rl.id = m.roles_id
+          WHERE us.id = ? AND m.roles_id = ?
+          LIMIT 1
+      `, [userId, roleId]);
+    },
+
+    getUserRoles(id) {
+        return db.query(`
+        SELECT 
+            usRole.id,
+            usRole.users_id,
+            usRole.roles_id,
+            rl.roles_name
+        FROM syst_users_roles usRole
+        JOIN syst_users m ON m.id = usRole.users_id
+        JOIN syst_roles rl ON rl.id = usRole.roles_id
+        WHERE usRole.users_id = ?
+            AND usRole.id_status = 1
+        ORDER BY rl.roles_name ASC, usRole.id ASC
+        `, [id]);
     },
 
 };

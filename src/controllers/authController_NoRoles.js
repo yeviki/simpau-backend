@@ -29,9 +29,12 @@ exports.login = async (req, res) => {
 
   // --- user tidak ditemukan ---
   if (!userExists) {
+    // --- simpan histori login jika gagal ---
     await Mauth.saveLoginHistory(null, "failed", req, identifier);
 
+    // --- update fail_count tambah count jika gagal di tabel user ---
     const [failRaw] = await Mauth.countFailedLogins(identifier);
+
     const failCount = failRaw[0].failCount || 0;
     const sisa = 10 - failCount;
 
@@ -50,21 +53,28 @@ exports.login = async (req, res) => {
 
   // --- user valid → cek password ---
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
+    if (!valid) {
     const now = new Date();
-    let failCount = (user.fail_count || 0) + 1;
+    let failCount = (user.fail_count || 0) + 1; // ambil fail_count dari user + 1
     let blockedUntil = null;
-    const baseLock = 1;
+    const baseLock = 1; // menit untuk setiap gagal login
 
+    // --- cek blokir sementara ---
     if (failCount >= 5 && failCount < 10) {
       blockedUntil = new Date(now.getTime() + baseLock * (failCount - 4) * 60 * 1000);
     }
 
+    // --- update fail_count & blocked_until di tabel user ---
     await Mauth.updateFailedLoginMeta(user.id, failCount, blockedUntil);
+
+    // --- simpan history ---
     await Mauth.saveLoginHistory(user.id, "failed", req, identifier);
 
+    // --- BLOKIR PERMANEN ---
     if (failCount >= 10) {
+      // --- Set blokir users berdasarkan id ---  
       await Mauth.blockUser(user.id);
+
       return res.status(403).json({
         message: "Akun diblokir karena terlalu banyak percobaan login gagal! Hubungi admin."
       });
@@ -93,83 +103,18 @@ exports.login = async (req, res) => {
   // --- reset fail count & unblock user ---
   await Mauth.updateFailedLoginMeta(user.id, 0);
 
-  // ============================================================================
-  // 🔥🔥🔥 TAMBAHAN DI SINI → CEK JUMLAH ROLES USER
-  // ============================================================================
+  // --- generate token ---
+  const token = jwt.sign(
+    { id: user.id, roles_id: user.roles_id },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES }
+  );
 
-  // ambil semua roles user
-  const [roleRows] = await Mauth.getUserRoles(user.id);
-
-  // mapping role structure
-  const roles = roleRows.map(r => ({
-    roles_id: r.roles_id,
-    roles_name: r.roles_name
-  }));
-
-  // --- jika user hanya punya 1 role → langsung login ---
-  if (roles.length === 1) {
-    const token = jwt.sign(
-      {
-        id: user.id,
-        roles_id: roles[0].roles_id
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES }
-    );
-
-    return res.json({
-      message: "Login berhasil",
-      directLogin: true,
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        roles_id: roles[0].roles_id
-      }
-    });
-  }
-
-  // --- jika user punya lebih dari 1 role → minta pilih role ---
   return res.json({
-    message: "Pilih roles untuk melanjutkan",
-    needSelectRole: true,
-    user: {
-      id: user.id,
-      name: user.name
-    },
-    roles // kirim semua roles
+    message: "Login berhasil",
+    token,
+    user: { id: user.id, name: user.name, roles_id: user.roles_id },
   });
-
-  // ============================================================================
-  // END TAMBAHAN
-  // ============================================================================
-};
-
-// --- pilih role setelah login ---
-exports.selectRole = async (req, res) => {
-  try {
-    const { user_id, roles_id } = req.body;
-
-    if (!user_id || !roles_id) {
-      return res.status(400).json({ message: "user_id dan roles_id wajib dikirim" });
-    }
-
-    // generate token berdasarkan role yg dipilih
-    const token = jwt.sign(
-      { id: user_id, roles_id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES }
-    );
-
-    return res.json({
-      message: "Login berhasil dengan role terpilih",
-      token,
-    });
-
-  } catch (err) {
-    console.error("selectRole error:", err);
-    res.status(500).json({ message: "Terjadi kesalahan server" });
-  }
 };
 
 // exports.login = async (req, res) => {
@@ -226,10 +171,7 @@ exports.getMenu = async (req, res) => {
 // ---- GET /auth/me ----
 exports.me = async (req, res) => {
   // --- Get By Id ---
-  const userId = req.user.id;
-  const rolesId = req.user.roles_id; // <-- ROLE YANG DIPILIH
-  
-  const [rows] = await Mauth.getByIdWithRole(userId, rolesId);
+  const [rows] = await Mauth.getById(req.user.id);
 
   if (rows.length === 0) {
     return res.status(404).json({ message: "User tidak ditemukan" });
