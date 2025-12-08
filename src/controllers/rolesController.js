@@ -178,15 +178,6 @@ exports.updateRoleMenus = async (req, res, next) => {
 // controllers/rolesController.js
 // Detail Roles Permission
 // --------------------------------------------- //
-exports.getPermission = async (req, res, next) => {
-  try {
-    const [rows] = await ModelData.getAllMenu();
-    res.json(rows);
-  } catch (err) {
-    next(err);
-  }
-};
-
 exports.getPermissionGrouped = async (req, res, next) => {
   try {
     const { id } = req.params;

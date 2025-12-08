@@ -100,6 +100,19 @@ exports.login = async (req, res) => {
   // ambil semua roles user
   const [roleRows] = await Mauth.getUserRoles(user.id);
 
+  // 🔥 FILTER: hanya role yang aktif (id_status = 1)
+  const activeRoles = roleRows.filter(r => r.id_status == 1);
+
+  // ==========================
+  // Jika TIDAK ADA role aktif
+  // ==========================
+  if (activeRoles.length === 0) {
+    return res.status(403).json({
+      noActiveRole: true,
+      message: "Tidak ada izin yang aktif untuk akun Anda. Silahkan hubungi Super Admin."
+    });
+  }
+
   // mapping role structure
   const roles = roleRows.map(r => ({
     roles_id: r.roles_id,

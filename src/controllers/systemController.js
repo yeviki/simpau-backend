@@ -2,54 +2,52 @@
 const ModelSystem = require("../models/systemModel");
 
 // =============================================== //
-//   GET STATUS MAINTENANCE
+//   GET STATUS MAINTENANCE + MESSAGE
 // =============================================== //
 exports.getMaintenanceStatus = async (req, res, next) => {
-    try {
-        const [rows] = await ModelSystem.getMaintenanceStatus();
+  try {
+    const [rows] = await ModelSystem.getMaintenanceStatus();
 
-        // Jika tidak ditemukan → default normal (0)
-        const status = rows.length ? rows[0].value : "0";
+    // Default kalau data kosong
+    const status = rows.length ? rows[0].value : "0";
+    const message = rows.length ? rows[0].message || "" : "";
 
-        return res.json({
-        status: Number(status)   // 1 = maintenance, 0 = normal
-        });
-    } catch (err) {
-        next(err);
-    }
+    return res.json({
+      status: Number(status),   // 1 = maintenance, 0 = normal
+      message: message
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // =============================================== //
 //   UPDATE / SET MODE MAINTENANCE
 // =============================================== //
 exports.setMaintenanceMode = async (req, res, next) => {
-    try {
-        const { status } = req.body; 
-        // status = "maintenance" | "normal"
+  try {
+    const { status, message = "" } = req.body;
+    // ✅ message diberi default ""
 
-        const modeValue = status === "maintenance" ? "1" : "0";
+    const modeValue = status === "maintenance" ? "1" : "0";
 
-        // Simpan status ke database
-        await ModelSystem.updateMaintenanceStatus(modeValue);
+    // ✅ update ke database
+    await ModelSystem.updateMaintenanceStatus(modeValue, message);
 
-        if (modeValue === "1") {
-        // MODE → MAINTENANCE
-        // Force logout semua user kecuali admin
-        await ModelSystem.forceLogoutNonAdmin();
-        } else {
-        // MODE → NORMAL
-        // Reset semua force_logout = 0
-        await ModelSystem.resetForceLogout();
-        }
-
-        return res.json({
-        success: true,
-        message: "Mode aplikasi diperbarui",
-        mode: status
-        });
-
-    } catch (err) {
-        next(err);
+    if (modeValue === "1") {
+      await ModelSystem.forceLogoutNonAdmin();
+    } else {
+      await ModelSystem.resetForceLogout();
     }
+
+    return res.json({
+      success: true,
+      message: "Mode aplikasi diperbarui",
+      mode: status
+    });
+
+  } catch (err) {
+    next(err);
+  }
 };
 
