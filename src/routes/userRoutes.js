@@ -18,6 +18,12 @@ const {
 // 3 Pimpinan
 // 4 Staf
 
+// checkForceLogout
+// Berguna untuk check apakah status users sudah di paksa logout atau tidak, jika tidak diberikan akses
+
+// checkMaintenance
+// Berguna untuk check apakah status app maintance atau tidak, jika tidak diberikan akses izin menampilkan data
+
 // Hanya adminsuper & adminlocal yang boleh CRUD users
 // router.get("/", auth, role(null, null, 1, 2, 3), getMenu); contoh jika set manual dan otomatis, jika ingin manual saja silahkan hapus null, null nya
 // router.get("/", auth, role(1, 2, 3), getUsers); // Manual configurasi

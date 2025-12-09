@@ -109,7 +109,7 @@ exports.login = async (req, res) => {
   if (activeRoles.length === 0) {
     return res.status(403).json({
       noActiveRole: true,
-      message: "Tidak ada izin yang aktif untuk akun Anda. Silahkan hubungi Super Admin."
+      message: "Tidak ada izin yang aktif untuk akun Anda. Silahkan hubungi Admin."
     });
   }
 
@@ -143,14 +143,26 @@ exports.login = async (req, res) => {
   }
 
   // --- jika user punya lebih dari 1 role → minta pilih role ---
+  // --- jika user punya lebih dari 1 role → minta pilih role ---
+  const roleCount = roles.length;
+
+  // Default message
+  let infoMessage = "Pilih roles untuk melanjutkan";
+
+  // Jika role lebih dari 1, tampilkan pesan informasi
+  if (roleCount > 1) {
+    infoMessage = `Informasi!\nAnda memiliki ${roleCount} group untuk bisa login, pilih salah satu untuk lanjut.`;
+  }
+
   return res.json({
-    message: "Pilih roles untuk melanjutkan",
+    message: infoMessage,
     needSelectRole: true,
+    roleCount: roleCount,
     user: {
       id: user.id,
       name: user.name
     },
-    roles // kirim semua roles
+    roles
   });
 
   // ============================================================================
@@ -164,7 +176,7 @@ exports.selectRole = async (req, res) => {
     const { user_id, roles_id } = req.body;
 
     if (!user_id || !roles_id) {
-      return res.status(400).json({ message: "user_id dan roles_id wajib dikirim" });
+      return res.status(400).json({ message: "User ID dan Roles ID wajib dikirim" });
     }
 
     // generate token berdasarkan role yg dipilih
